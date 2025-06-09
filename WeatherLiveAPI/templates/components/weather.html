@@ -1,0 +1,75 @@
+{% load static %}
+<div style="position: relative; height: 220px; margin-top: 40px;">
+  <!-- 애니메이션만 위로 띄움 -->
+  <div id="weather-anim"
+       style="position: absolute;
+              top: 20px;
+              left: 80%;
+              transform: translateX(-20%);
+              z-index: 1;
+              width: 120px;
+              height: 120px;">
+  </div>
+
+  <!-- 기온 텍스트는 아래쪽 여유 공간에 표시 -->
+  <p id="temperature"
+     style="position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(20%);
+            z-index: 1;
+            font-size: 18px;
+            color: #333;
+            white-space: nowrap;">
+     °C
+  </p>
+</div>
+
+<script src="https://unpkg.com/lottie-web"></script>
+<script>
+  const container = document.getElementById('weather-anim');
+  const tempBox = document.getElementById('temperature');
+  let animation = null;
+
+  navigator.geolocation.getCurrentPosition(success, error);
+
+  function success(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    const apiKey = "96cac1e3452c83258d58f8a071636b85";  // OpenWeatherMap API 키
+
+    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`)
+      .then(response => response.json())
+      .then(data => {
+        const description = data.weather[0].description.toLowerCase();
+        const tempC = data.main.temp.toFixed(1);
+        tempBox.innerText = `${tempC} °C`;
+
+        let animPath = "{% static 'Animation/clear.json' %}";
+        if (description.includes("rain")) animPath = "{% static 'Animation/rain.json' %}";
+        else if (description.includes("snow")) animPath = "{% static 'Animation/snow.json' %}";
+        else if (description.includes("thunder")) animPath = "{% static 'Animation/thunder.json' %}";
+        else if (description.includes("cloud")) animPath = "{% static 'Animation/cloud.json' %}";
+        else if (description.includes("clear")) animPath = "{% static 'Animation/clear.json' %}";
+
+        animation = lottie.loadAnimation({
+          container: container,
+          renderer: 'svg',
+          loop: true,
+          autoplay: false,
+          path: animPath
+        });
+
+        container.addEventListener('mouseenter', () => animation.play());
+        container.addEventListener('mouseleave', () => animation.stop());
+      })
+      .catch(err => {
+        tempBox.innerText = "기온 데이터를 불러올 수 없습니다.";
+        console.error(err);
+      });
+  }
+
+  function error() {
+    tempBox.innerText = "위치 정보를 허용해야 기온을 표시할 수 있습니다.";
+  }
+</script>

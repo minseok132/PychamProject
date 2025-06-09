@@ -1,0 +1,15 @@
+{% load static %}
+
+<video autoplay muted loop playsinline class="header-video">
+  {% if weather.condition == "Clear" %}
+    <source src="{% static 'videos/sunny.mp4' %}" type="video/mp4">
+  {% elif weather.condition == "Clouds" %}
+    <source src="{% static 'videos/cloud.mp4' %}" type="video/mp4">
+  {% elif weather.condition == "Rain" %}
+    <source src="{% static 'videos/rain.mp4' %}" type="video/mp4">
+  {% elif weather.condition == "Snow" %}
+    <source src="{% static 'videos/snow.mp4' %}" type="video/mp4">
+  {% else %}
+    <source src="{% static 'videos/cloud.mp4' %}" type="video/mp4"> {# fallback #}
+  {% endif %}
+</video>
