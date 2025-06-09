@@ -1,0 +1,53 @@
+{% extends "base_login.html" %}
+{% block title %}회원 정보 수정{% endblock %}
+{% block content %}
+<div class="form-box">
+  <h2>회원 정보 수정</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- 유저 정보 -->
+    {% for field in user_form %}
+      <div class="form-field">
+        <label>
+          {% if field.name == 'username' %}아이디
+          {% elif field.name == 'nickname' %}닉네임
+          {% else %}{{ field.label }}
+          {% endif %}
+        </label>
+        {{ field }}
+        <!-- 유저 정보 에러 -->
+        {% if field.errors %}
+          <div class="error">
+            {{ field.errors }}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <!-- 닉네임 -->
+    {% for field in profile_form %}
+      <div class="form-field">
+        <label>
+          {% if field.name == 'username' %}아이디
+          {% elif field.name == 'nickname' %}닉네임
+          {% else %}{{ field.label }}
+          {% endif %}
+        </label>
+        {{ field }}
+        <!-- 닉네임 중복 에러 -->
+        {% if field.errors %}
+          <div class="error">
+            {{ field.errors }}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <button type="submit">저장하기</button>
+  </form>
+
+  <a href="{% url 'profile' %}">← 프로필로 돌아가기</a>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base_login.html" %}
+{% block title %}프로필{% endblock %}
+{% block content %}
+<div class="form-box">
+  <h2>{{ user.profile.nickname|default:user.username }}님의 프로필</h2>
+  <p><strong>이메일:</strong> {{ user.email }}</p>
+
+  <a href="{% url 'profile_edit' %}">✏️ 정보 수정</a>
+  <a href="{% url 'password_change' %}">🔐 비밀번호 변경</a>
+  <a href="/">🏠 홈으로</a>
+</div>
+{% endblock %}

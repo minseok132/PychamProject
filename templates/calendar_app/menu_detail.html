@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2>학식메뉴 - {{ menu.date|date:"Y년 n월 j일" }}</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ mform.as_p }}
+  <button type="submit">메뉴 저장</button>
+</form>
+
+<hr>
+
+<h3>업로드된 사진</h3>
+<ul>
+  {% for photo in photos %}
+    <li>
+      <img src="{{ photo.image.url }}"
+           alt="학식 사진"
+           style="max-width:200px; height:auto;"/>
+    </li>
+  {% empty %}
+    <li>아직 업로드된 사진이 없습니다.</li>
+  {% endfor %}
+</ul>
+
+<hr>
+
+<h3>새 사진 업로드</h3>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ pform.as_p }}
+  <button type="submit">사진 업로드</button>
+</form>
+
+<p><a href="{% url 'calendar_app:calendar_view' %}">← 달력으로 돌아가기</a></p>
+{% endblock %}

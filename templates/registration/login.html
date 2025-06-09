@@ -1,0 +1,21 @@
+{% extends "base_login.html" %}
+{% block title %}로그인{% endblock %}
+{% block content %}
+<div class="form-box">
+    <h2>로그인</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+            </div>
+        {% endfor %}
+        <button type="submit">로그인</button>
+    </form>
+
+    <a href="{% url 'password_reset' %}">비밀번호를 잊으셨나요?</a>
+    <a href="{% url 'signup' %}">아직 회원이 아니신가요? 회원가입</a>
+    <a href="/">🏠 홈으로</a>
+</div>
+{% endblock %}

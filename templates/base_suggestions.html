@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}청주대학교{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col items-center">
+
+    <!-- 상단 네비게이션 (오른쪽 상단) -->
+    <div class="w-full flex justify-end px-6 py-4 text-sm">
+        {% if user.is_authenticated %}
+            <span class="mr-2">{{ user.username }}님</span>
+            <a href="{% url 'profile' %}" class="text-blue-600 hover:underline mr-2">내 프로필</a>
+            <form action="{% url 'logout' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-blue-600 hover:underline">로그아웃</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}" class="text-blue-600 hover:underline mr-2">로그인</a>
+            <a href="{% url 'signup' %}" class="text-blue-600 hover:underline">회원가입</a>
+        {% endif %}
+    </div>
+
+    <!-- 콘텐츠 영역 -->
+    <main class="flex flex-col items-center w-full max-w-4xl px-4 space-y-8 mt-6 mb-12">
+
+        <!-- 로고 (중앙) -->
+        <a href="{% url 'calendar_app:calendar' %}">
+        <img src="{% static 'images/cheongju_logo_01.png' %}" alt="청주대 로고" class="h-24">
+        </a>
+        <!-- 개별 페이지 내용 -->
+        {% block content %}
+        {% endblock %}
+    </main>
+
+</body>
+</html>

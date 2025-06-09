@@ -1,0 +1,1021 @@
+{% load static %}
+{% load humanize %}
+{% load format_extras %}
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>대학생들을 위한 웹</title>
+  <style>
+
+    .calendar-box {
+      background:#fff; border:1px solid #ccc; padding:20px; margin-bottom:20px;
+    }
+    .calendar-header { display:flex; align-items:center; justify-content:space-between; }
+    .calendar-header form, .calendar-header button.nav-btn { margin:0; }
+    .calendar-header button.nav-btn { font-size:1.2em; padding:5px 15px; cursor:pointer; }
+    .calendar-header button#timer-btn { margin:0 8px; padding:5px 12px; cursor:pointer; }
+    .calendar-header #timer-display,
+    .calendar-header #stop-timer-btn,
+    .calendar-header #record-timer-btn { display:none; margin-right:4px; }
+
+    .calendar-grid {
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      grid-template-rows:repeat(5,120px);
+      gap:5px;
+      margin-top:10px;
+    }
+    .calendar-grid button {
+      position:relative; background:#fff; border:1px solid #000;
+      padding:4px; text-align:left; cursor:pointer; overflow:hidden;
+    }
+    .day-num { position:absolute; top:4px; left:4px; font-weight:bold; color:#000; }
+    .other-month .day-num { color:#ccc!important; }
+    .sunday .day-num { color:red; }
+    .saturday .day-num { color:blue; }
+
+    .hour-badge, .memo-badge {
+      display:block;
+      width:100%;
+      box-sizing:border-box;
+      text-align:center;
+      border-radius:2px;
+      font-size:0.8em;
+      margin-top:4px;
+      padding:2px 0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .hour-badge {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.memo-badge {
+  background: #ffc107;
+  color: #000;
+}
+
+    .hour-badge { background:#0d6efd; color:#fff; }
+    .memo-badge { background:#ffc107; color:#000; }
+
+    .menu-badge {
+      background: #198754;
+      color: #fff;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+      border-radius: 2px;
+      font-size: 0.8em;
+      margin-top: 4px;
+      padding: 2px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .details {
+      background:#fff; border:1px solid #ccc; padding:20px;
+    }
+    .details h3 { margin-top:0; }
+    .details ul { list-style:none; padding-left:0; }
+    .details li { position:relative; padding-right:36px; margin-bottom:8px; }
+    .delete-log-btn, .delete-memo-btn {
+      position:absolute; right:4px; top:50%; transform:translateY(-50%);
+      background:transparent; border:none; color:#dc3545; font-size:1.2em;
+      cursor:pointer; width:24px; height:24px; line-height:24px;
+
+
+    }
+
+    /* 메뉴 텍스트 삭제 버튼 */
+  .delete-menu-text-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    font-size: 1.2em;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+  }
+
+  /* 사진 삭제 버튼 */
+  .delete-photo-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #dc3545;
+    font-size: 1.2em;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+  }
+
+  /* 버튼 위치 기준을 위한 부모 */
+  .menu-text {
+    position: relative;
+  }
+  .menu-photos li {
+    position: relative;
+  }
+
+    .campus-map {
+      background:#fff; border:1px solid #ccc; padding:20px;
+      text-align:center; font-size:1.2em;
+    }
+
+    .box img {
+        border-radius: 8px;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .box img:hover {
+        transform: scale(1.05);
+    }
+
+    body {
+        margin: 0;
+        font-family: sans-serif;
+        background-color: #f9f9f9;
+    }
+
+    .container {
+        display: grid;
+        grid-template-areas:
+            "header header header"
+            "left center right";
+        grid-template-columns: 1fr 2fr 1fr;
+        grid-template-rows: 120px auto;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .header {
+        grid-area: header;
+        background-color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.8em;
+        border: 1px solid #ccc;
+        position: relative;
+    }
+
+    .header .center-logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .header .right-login {
+        margin-left: auto;
+        font-size: 0.6em;
+        text-align: right;
+    }
+
+    .left, .right {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .left {
+        grid-area: left;
+    }
+
+    .center {
+        grid-area: center;
+    }
+
+    .right {
+        grid-area: right;
+    }
+
+    .box {
+        background-color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 1.2em;
+        border: 1px solid #ccc;
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .calendar-header button {
+        font-size: 1.2em;
+        padding: 5px 15px;
+        cursor: pointer;
+    }
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        margin-top: 10px;
+    }
+
+    .details {
+        margin-top: 30px;
+        padding: 20px;
+        background: white;
+        border: 1px solid #ccc;
+    }
+    .details img {
+        max-width: 200px;
+        margin-top: 10px;
+    }
+    .login-primary-button {
+        display: inline-block;
+        color: #ffffff;
+        background: linear-gradient(to right, #42a5f5, #1e88e5);
+        border: none;
+        padding: 10px 32px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 0.95em;
+        text-decoration: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease-in-out;
+    }
+    .login-primary-button:hover {
+        background: linear-gradient(to right, #1669c1, #003f91);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        transform: translateY(-2px);
+    }
+    .login-primary-button:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .time-measurement-button {
+        display: inline-block;
+        color: #000000;
+        background: white;
+        border: none;
+        padding: 10px 32px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 0.95em;
+        text-decoration: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease-in-out;
+    }
+    .time-measurement-button:hover { /* 호버 기능은 제거하고 어둡게 해주는 기능만 추가 */
+    background: #e6e6e6; /* 원래보다 살짝 어두운 회색 */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+
+    .suggestion-preview-box {
+        border: 1px solid #e5e8eb;
+        border-radius: 12px;
+        background-color: #ffffff;
+        padding: 20px;
+        text-align: left;
+        min-height: 160px;
+    }
+
+    .suggestion-header {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .suggestion-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    .suggestion-list li {
+        margin-bottom: 8px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .suggestion-list a {
+        text-decoration: none;
+        color: #1a1a1a;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+    }
+
+    .suggestion-list a:hover {
+        color: #1a73e8;
+    }
+
+    .more-link {
+        margin-top: 12px;
+        text-align: right;
+    }
+
+    .more-link a {
+        font-size: 0.85rem;
+        color: #1a73e8;
+        text-decoration: none;
+    }
+    .header {
+    position: relative;
+    overflow: hidden;
+    }
+
+    .header-video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        transform: translate(-50%, -50%);
+        object-fit: cover;
+        z-index: 0;
+        opacity: 0.6;
+    }
+
+    .header .center-logo,
+    .header .right-login,
+    .header .weather {
+        position: relative;
+        z-index: 1;
+    }
+
+    .circle-button {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: white;
+        border: none;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+    }
+    .circle-button:hover {
+        background: #f2f2f2;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    }
+    .circle-button:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <!-- 날씨 컴포넌트 포함 -->
+      {% include 'components/weather.html' %}
+      {% include 'components/weatherVideo.html' %}
+
+        <div class="center-logo">
+            <a href="/" style="display: inline-block;">
+                <img src="{% static 'images/cheongju_logo_01.png' %}" alt="청주대 로고" style="height: 120px;">
+            </a>
+        </div>
+
+
+        <div class="right-login">
+        {% if user.is_authenticated %}
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+          <span style="font-weight: 600; color: black; margin-bottom: 6px; transform: translateY(-7px);">
+            환영합니다! {{ user.profile.nickname|default:user.username }}님
+          </span>
+          <div style="display: flex; gap: 10px;">
+            <a href="{% url 'profile' %}" class="login-primary-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                     fill="white" viewBox="0 0 16 16"
+                     style="vertical-align: middle; margin-right: 6px; transform: scale(1.4)">
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a 3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                </svg>
+              프로필
+            </a>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="login-primary-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                       fill="white" viewBox="0 0 16 16"
+                       style="vertical-align: middle; margin-right: 6px;">
+                      <path d="M8 1a3 3 0 0 0-3 3v3H4a2 2 0 0 0-2 2v5a2
+                                         2 0 0 0 2 2h8a2 2 0 0 0 2-2v-5a2 2 0 0
+                                         0-2-2h-1V4a3 3 0 0 0-3-3zm-2 6V4a2
+                                         2 0 1 1 4 0v3H6z"/>
+                  </svg>
+                로그아웃
+              </button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <a href="{% url 'login' %}" class="login-primary-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="24"
+                 fill="white" viewBox="0 0 16 16"
+                 style="vertical-align: middle; margin-right: 8px;">
+                <path d="M8 1a3 3 0 0 0-3 3v3H4a2 2 0 0 0-2 2v5a2
+                             2 0 0 0 2 2h8a2 2 0 0 0 2-2v-5a2 2 0 0
+                             0-2-2h-1V4a3 3 0 0 0-3-3zm-2 6V4a2
+                             2 0 1 1 4 0v3H6z"/>
+            </svg>
+          로그인
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="left">
+        <div class="box suggestion-preview-box">
+            <div class="suggestion-header">
+                📬 건의함 커뮤니티
+                <a href="{% url 'suggestion_community' %}" class="more-link"
+                   style="float: right; font-size: 0.85rem; color: #1a73e8;">
+                    더보기
+                </a>
+            </div>
+
+            {% if recent_suggestions %}
+                <ul class="suggestion-list">
+                    {% for post in recent_suggestions %}
+                        <li>
+                            <a href="{% url 'suggestion_detail' post.id %}">
+                                {{ post.title }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty-hint">최근 건의글이 없습니다.</p>
+            {% endif %}
+        </div>
+
+        <div class="box suggestion-preview-box">
+            <div class="suggestion-header">
+                📚 중고도서 게시판
+                <a href="{% url 'used_books:book_list' %}" class="more-link"
+                   style="float: right; font-size: 0.85rem; color: #1a73e8;">
+                    더보기
+                </a>
+            </div>
+
+            {% if recent_books %}
+                <ul class="suggestion-list">
+                    {% for book in recent_books %}
+                        <li>
+                            <a href="{% url 'used_books:book_detail' book.id %}">
+                                {{ book.title }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty-hint">최근 중고도서가 없습니다.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- 중앙: 달력 + 상세 -->
+  <div class="center">
+    <!-- 달력 -->
+    <div class="calendar-box">
+      <div class="calendar-header">
+        <form method="get" style="margin: 0;">
+                  <button type="submit" name="month" value="{{ prev_month }}" class="circle-button">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="black" viewBox="0 0 16 16" stroke="black" stroke-width="1.8" style="margin-left: -5px;">
+                          <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L6.707 7l4.647 4.646a.5.5 0 0 1-.708.708l-5-5a.5.5 0 0 1 0-.708l5-5a.5.5 0 0 1 .708 0z"/>
+                      </svg>
+                  </button>
+              </form>
+        <h3 id="month-display" style="cursor: pointer;">{{ current_month|date:"Y년 n월" }}</h3>
+
+          <!-- 숨겨진 년/월 입력창 -->
+          <div id="month-picker" style="display: none; margin-top: 8px;">
+              <form method="get" style="display: flex; align-items: center; gap: 4px;">
+                  <select name="year"
+                          style="border: 1px solid #ccc; border-radius: 4px; padding: 2px 4px; font-size: 0.9em;">
+                      {% for y in years %}
+                          <option value="{{ y }}" {% if y == current_month.year %}selected{% endif %}>{{ y }}</option>
+                      {% endfor %}
+                  </select>
+                  년
+                  <select name="month"
+                          style="border: 1px solid #ccc; border-radius: 4px; padding: 2px 4px; font-size: 0.9em;">
+                      {% for m in months %}
+                          <option value="{{ m }}" {% if m == current_month.month %}selected{% endif %}>{{ m }}</option>
+                      {% endfor %}
+                  </select>
+                  월
+                  <button type="submit"
+                          style="background-color: #1a73e8; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
+                      이동
+                  </button>
+              </form>
+          </div>
+
+        <button id="timer-btn" class="time-measurement-button" style="font-size: 1em; padding: 10px 36px;">⏱ 시간측정</button>
+        <span id="timer-display">00:00:00</span>
+        <button id="stop-timer-btn" class="time-measurement-button" style="font-size: 1em; padding: 10px 36px;">중지</button>
+        <button id="record-timer-btn" class="time-measurement-button" style="font-size: 1em; padding: 10px 36px;">기록</button>
+          <form method="get" style="margin: 0;">
+              <button type="submit" name="month" value="{{ next_month }}" class="circle-button">
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                       width="20" height="20"
+                       fill="black"
+                       viewBox="0 0 16 16"
+                       stroke="black"
+                       stroke-width="1.8"
+                       style="transform: scaleX(-1); margin-right: -5px;">
+                      <path fill-rule="evenodd"
+                            d="M11.354 1.646a.5.5 0 0 1 0 .708L6.707 7l4.647 4.646a.5.5 0 0 1-.708.708l-5-5a.5.5 0 0 1 0-.708l5-5a.5.5 0 0 1 .708 0z"/>
+                  </svg>
+              </button>
+          </form>
+      </div>
+      <div class="calendar-grid">
+        {% for week in calendar_weeks %}
+          {% for d in week %}
+            {% with d|date:"Y-m-d" as daystr %}
+            <button
+              class="
+                {% if d.month != current_month.month %}other-month{% endif %}
+                {% if d|date:"w" == "0" %} sunday{% elif d|date:"w" == "6" %} saturday{% endif %}
+              "
+              data-date="{{ daystr }}"
+              onclick="location.href='?month={{ current_month|date:'Y-m' }}&date={{ daystr }}'"
+            >
+              <span class="day-num">{{ d.day }}</span>
+
+               {# 기존 뱃지 코드 유지 #}
+              {% for entry in calendar_days %}
+                {% if entry.date|date:"Y-m-d" == daystr %}
+                  {% for log in entry.work_logs %}
+                    <div class="hour-badge">{{ log.hours_worked|format_hours }}</div>
+                  {% endfor %}
+                  {% for memo in entry.memos %}
+                    <div class="memo-badge">{{ memo.note }}</div>
+                  {% endfor %}
+
+                 {# 학식메뉴 뱃지 추가 #}
+                 {% for menu in entry.menus %}
+                   {% if menu.menu_text or menu.photos.all %}
+                     <div class="menu-badge">학식메뉴</div>
+                   {% endif %}
+                 {% endfor %}
+                {% endif %}
+              {% endfor %}
+
+            </button>
+            {% endwith %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 상세 영역 -->
+    <div class="details">
+      {% if selected_date %}
+        <h3>{{ selected_date }}</h3>
+
+        {% if selected_logs %}
+          <h4>🕓 공부 기록</h4>
+          <ul id="log-list">
+            {% for log in selected_logs %}
+              <li data-id="{{ log.id }}">
+                {{ log.hours_worked|format_hours }}
+                {% if log.note %} - {{ log.note }}{% endif %}
+                <button class="delete-log-btn">&times;</button>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if selected_memos %}
+          <h4>📝 메모</h4>
+          <ul id="memo-list">
+            {% for memo in selected_memos %}
+              <li data-id="{{ memo.id }}">
+                {{ memo.note }}
+                <button class="delete-memo-btn">&times;</button>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if mform %}
+
+
+  <h4>🍽️ 학식메뉴</h4>
+
+  <!-- 1) 메뉴 텍스트 -->
+   <div class="menu-text">
+    {% if mform.instance.menu_text %}
+      {{ mform.instance.menu_text|linebreaksbr }}
+      <button type="button" id="btn-delete-menu-text">✕</button>
+    {% else %}
+      <em>등록된 메뉴가 없습니다.</em>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if selected_photos %}
+  <h4>🍽️ 학식메뉴 사진</h4>
+  <div class="menu-photos">
+    <ul id="photos-list" style="list-style:none; padding:0; display:flex; gap:8px;">
+      {% for photo in selected_photos %}
+        <li data-photo-id="{{ photo.id }}">
+          <button type="button" class="delete-photo-btn">&times;</button>
+          <img src="{{ photo.image.url }}"
+               alt="학식 사진"
+               style="max-width:100px; height:auto; border:1px solid #ccc;"/>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+<!-- 그 다음에 기존 토글 버튼 및 폼이 나와야 합니다 -->
+<div class="add-buttons">
+  <button type="button" id="btn-show-log">시간 추가</button>
+  <button type="button" id="btn-show-memo">메모 추가</button>
+  <button type="button" id="btn-show-menu">학식메뉴</button>
+</div>
+        <!-- 시간 추가 폼 -->
+        <div id="log-form-container" style="display:none;">
+          <form id="add-log-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="date"  value="{{ selected_date|date:'Y-m-d' }}">
+            <input type="hidden" name="month" value="{{ current_month|date:'Y-m' }}">
+            <label>시간: <input type="number" name="hours" step="0.5" min="0" required></label>
+            <button type="submit">저장</button>
+          </form>
+        </div>
+
+        <!-- 메모 추가 폼 -->
+        <div id="memo-form-container" style="display:none;">
+          <form id="add-memo-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="date"  value="{{ selected_date|date:'Y-m-d' }}">
+            <input type="hidden" name="month" value="{{ current_month|date:'Y-m' }}">
+            <label>메모: <textarea name="note" rows="2" required></textarea></label>
+            <button type="submit">저장</button>
+          </form>
+        </div>
+
+        <!-- 학식메뉴 폼 컨테이너 -->
+        <div id="menu-form-container" style="display:none; margin-top:20px;">
+  <h4>메뉴 내용</h4>
+  <p id="existing-menu-text">
+    {% if mform.instance.menu_text %}
+      {{ mform.instance.menu_text|linebreaksbr }}
+    {% else %}
+      <em>아직 작성된 메뉴가 없습니다.</em>
+    {% endif %}
+  </p>
+
+  <form id="add-menu-form">
+    {% csrf_token %}
+    {{ mform.as_p }}
+    <button type="submit">메뉴 저장</button>
+  </form>
+
+  <hr>
+
+  <h4>업로드된 사진</h4>
+  <ul id="photos-list">
+    {% for photo in selected_photos %}
+      <li><img src="{{ photo.image.url }}" style="max-width:100px;"/></li>
+    {% empty %}
+      <li>사진이 없습니다.</li>
+    {% endfor %}
+  </ul>
+
+  <form id="upload-menu-photo-form"
+        method="post"
+        enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ pform.as_p }}
+    <button type="submit">사진 업로드</button>
+  </form>
+</div>
+
+      {% else %}
+        <p>날짜를 클릭하면 상세 정보와 기록 추가 폼이 표시됩니다.</p>
+      {% endif %}
+    </div>
+  </div>
+
+    <div class="right">
+      <div class="box" style="text-align: center; font-weight: bold;
+        font-size: 1.1rem; ">
+          캠퍼스 맵
+        <a href="{% url 'campus_map' %}">
+          <img src="{% static 'images/campus_button.png' %}" alt="캠퍼스맵" style="width: 100%; height: auto; display: block; border-radius: 8px;">
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) CSRF 토큰 가져오기
+  function getCookie(name) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+      c = c.trim();
+      if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+    });
+    return v;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // 2) 버튼 & 컨테이너 참조
+  const btnLog    = document.getElementById('btn-show-log'),
+        btnMemo   = document.getElementById('btn-show-memo'),
+        btnMenu   = document.getElementById('btn-show-menu'),
+        contLog   = document.getElementById('log-form-container'),
+        contMemo  = document.getElementById('memo-form-container'),
+        contMenu  = document.getElementById('menu-form-container');
+
+  // 3) 토글 핸들러
+  btnLog?.addEventListener('click', e => {
+    e.preventDefault();
+    contLog.style.display  = contLog.style.display === 'block' ? 'none' : 'block';
+    contMemo.style.display = 'none';
+    contMenu.style.display = 'none';
+  });
+  btnMemo?.addEventListener('click', e => {
+    e.preventDefault();
+    contMemo.style.display = contMemo.style.display === 'block' ? 'none' : 'block';
+    contLog.style.display  = 'none';
+    contMenu.style.display = 'none';
+  });
+  btnMenu?.addEventListener('click', e => {
+    e.preventDefault();
+    contMenu.style.display = contMenu.style.display === 'block' ? 'none' : 'block';
+    contLog.style.display  = 'none';
+    contMemo.style.display = 'none';
+  });
+
+  // 4) 시간 추가 AJAX
+  const logForm = document.getElementById('add-log-form');
+  logForm?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(logForm);
+    fd.append('date', '{{ selected_date|date:"Y-m-d" }}');
+    const res = await fetch("{% url 'calendar_app:add_worklog' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken },
+      body: fd
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      location.reload();
+    } else {
+      alert(data.message || '시간 추가 실패');
+    }
+  });
+
+  // 5) 메모 추가 AJAX
+  const memoForm = document.getElementById('add-memo-form');
+  memoForm?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(memoForm);
+    const res = await fetch("{% url 'calendar_app:add_memo' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken },
+      body: fd
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      location.reload();
+    } else {
+      alert(data.message || '메모 추가 실패');
+    }
+  });
+
+  // 6) 학식메뉴 텍스트 저장 AJAX
+  const menuForm = document.getElementById('add-menu-form');
+  menuForm?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(menuForm);
+    fd.append('date', '{{ selected_date|date:"Y-m-d" }}');
+    const res = await fetch("{% url 'calendar_app:add_menu_text' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken },
+      body: fd
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      document.getElementById('existing-menu-text').innerHTML =
+        data.menu_text.replace(/\n/g, '<br>');
+    } else {
+      alert(data.message || '메뉴 저장 실패');
+    }
+  });
+
+  // 7) 학식메뉴 사진 업로드 AJAX
+  const photoForm = document.getElementById('upload-menu-photo-form');
+  photoForm?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(photoForm);
+    fd.append('date', '{{ selected_date|date:"Y-m-d" }}');
+    const res = await fetch("{% url 'calendar_app:upload_menu_photo' %}", {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken },
+      body: fd
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      const li = document.createElement('li');
+      li.innerHTML = `<img src="${data.photo_url}" style="max-width:100px; height:auto;">`;
+      document.getElementById('photos-list').appendChild(li);
+    } else {
+      alert(data.message || '사진 업로드 실패');
+    }
+  });
+
+  // 9) 공부 기록 삭제 AJAX
+  document.querySelectorAll('.delete-log-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.preventDefault();
+      const li = btn.closest('li');
+      const id = li.dataset.id;
+      const fd = new FormData();
+      fd.append('id', id);
+      const res = await fetch("{% url 'calendar_app:delete_worklog' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken },
+        body: fd
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        li.remove();
+      } else {
+        alert(data.message || '기록 삭제 실패');
+      }
+    });
+  });
+
+  // 10) 메모 삭제 AJAX
+  document.querySelectorAll('.delete-memo-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.preventDefault();
+      const li = btn.closest('li');
+      const id = li.dataset.id;
+      const fd = new FormData();
+      fd.append('id', id);
+      const res = await fetch("{% url 'calendar_app:delete_memo' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken },
+        body: fd
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        li.remove();
+      } else {
+        alert(data.message || '메모 삭제 실패');
+      }
+    });
+  });
+
+    // 메뉴 텍스트 삭제
+const delMenuTxtBtn = document.getElementById('btn-delete-menu-text');
+delMenuTxtBtn?.addEventListener('click', async e => {
+  if (!confirm('메뉴 내용을 삭제하시겠습니까?')) return;
+  const fd = new FormData();
+  fd.append('date', '{{ selected_date|date:"Y-m-d" }}');
+  const res = await fetch("{% url 'calendar_app:delete_menu_text' %}", {
+    method:'POST',
+    headers:{ 'X-CSRFToken': csrftoken },
+    body: fd
+  });
+  const data = await res.json();
+  if (data.status==='ok') {
+    document.querySelector('.menu-text').innerHTML =
+      '<em>등록된 메뉴가 없습니다.</em>';
+  } else {
+    alert(data.message||'삭제 실패');
+  }
+});
+
+// 메뉴 사진 삭제
+document.querySelectorAll('.delete-photo-btn').forEach(btn => {
+  btn.addEventListener('click', async e => {
+    if (!confirm('이 사진을 삭제하시겠습니까?')) return;
+    const li = btn.closest('li');
+    const pid = li.dataset.photoId;
+    const fd = new FormData();
+    fd.append('photo_id', pid);
+    const res = await fetch("{% url 'calendar_app:delete_menu_photo' %}", {
+      method:'POST',
+      headers:{ 'X-CSRFToken': csrftoken },
+      body: fd
+    });
+    const data = await res.json();
+    if (data.status==='ok') {
+      li.remove();
+    } else {
+      alert(data.message||'삭제 실패');
+    }
+  });
+});
+
+  // 8) 타이머 로직
+  let timerInterval, startTime;
+  const timerBtn = document.getElementById('timer-btn'),
+        disp     = document.getElementById('timer-display'),
+        stopBtn  = document.getElementById('stop-timer-btn'),
+        recBtn   = document.getElementById('record-timer-btn');
+
+  timerBtn?.addEventListener('click', () => {
+    if (!confirm('시간 측정을 시작하시겠습니까?')) return;
+    startTime = Date.now();
+    disp.style.display  = 'inline';
+    stopBtn.style.display = 'inline';
+    recBtn.style.display  = 'none';
+    timerInterval = setInterval(() => {
+      const diff = Date.now() - startTime,
+            h = String(Math.floor(diff/3600000)).padStart(2,'0'),
+            m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0'),
+            s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+      disp.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+  });
+
+  stopBtn?.addEventListener('click', () => {
+    clearInterval(timerInterval);
+    stopBtn.style.display = 'none';
+    recBtn.style.display  = 'inline';
+  });
+
+  recBtn?.addEventListener('click', async () => {
+    const [hh,mm,ss] = disp.textContent.split(':').map(Number),
+          hoursDec  = +((hh + mm/60 + ss/3600).toFixed(4)),
+          dateStr   = new URLSearchParams(location.search).get('date');
+    if (!dateStr) { alert('날짜 선택 후 기록하세요'); return; }
+    const fd2 = new FormData();
+    fd2.append('date', dateStr);
+    fd2.append('hours', hoursDec);
+    const res2 = await fetch("{% url 'calendar_app:add_worklog' %}", {
+      method:'POST',
+      headers:{ 'X-CSRFToken': csrftoken },
+      body: fd2
+    });
+    const data2 = await res2.json();
+    if (data2.status === 'ok') location.reload();
+    else alert(data2.message || '기록 실패');
+  });
+
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const monthDisplay = document.getElementById('month-display');
+  const monthPicker = document.getElementById('month-picker');
+
+  // 달력 제목 클릭 → 입력폼 토글
+  monthDisplay.addEventListener('click', () => {
+    if (monthPicker.style.display === 'none') {
+      monthPicker.style.display = 'block';
+    } else {
+      monthPicker.style.display = 'none';
+    }
+  });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const calendarGrid = document.querySelector('.calendar-grid');
+
+  if (calendarGrid) {
+    const weeks = calendarGrid.querySelectorAll(':scope > button').length / 7;
+
+    // 6줄 달력만 동적으로 처리
+    if (weeks === 6) {
+      calendarGrid.style.gridTemplateRows = 'repeat(6, 120px)';
+    } else {
+      calendarGrid.style.gridTemplateRows = 'repeat(5, 120px)';
+    }
+  }
+});
+
+</script>
+</body>
+</html>

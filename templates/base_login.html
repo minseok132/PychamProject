@@ -1,0 +1,140 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}청주대학교{% endblock %}</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .container {
+            margin-top: 60px;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        .form-box {
+            width: 340px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-box h2 {
+            margin-bottom: 25px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .form-field label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-field input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-box button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-box a {
+            display: block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .form-box a:hover {
+            text-decoration: underline;
+        }
+
+        .top-nav {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 14px;
+        }
+
+        .top-nav form {
+            display: inline;
+        }
+
+        .top-nav button {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .top-nav a {
+            margin-left: 8px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .top-nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 로그인 상태에 따른 상단 메뉴 -->
+    <div class="top-nav">
+        {% if user.is_authenticated %}
+            {{ user.username }}님
+            <a href="{% url 'profile' %}">내 프로필</a>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">로그아웃</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}">로그인</a>
+            <a href="{% url 'signup' %}">회원가입</a>
+        {% endif %}
+    </div>
+
+
+
+    <!-- 로고 + 내용 -->
+    <div class="container">
+        <div class="logo">
+            <a href="{% url 'calendar_app:calendar' %}">
+            <img src="{% static 'images/cheongju_logo_01.png' %}" alt="청주대 로고" width="130">
+            </a>
+        </div>
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+</html>

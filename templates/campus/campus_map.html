@@ -1,0 +1,133 @@
+{% extends "base_campus_map.html" %}
+{% load static %}
+
+{% block title %}캠퍼스맵{% endblock %}
+
+{% block content %}
+
+<style>
+
+  #marker-group {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+</style>
+
+<div class="campus-map-box">
+    <div class="center-logo" style="text-align: center; margin-top: 10px;">
+        <a href="/" style="display: inline-block;">
+            <img src="{% static 'images/cheongju_logo_01.png' %}" alt="청주대 로고" style="height: 80px;">
+        </a>
+    </div>
+  <h2 style="text-align: center;">캠퍼스 맵</h2>
+
+
+  <!-- 버튼 2개 추가 (위쪽) -->
+  <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+    <a href="{% url 'campus_map' %}" style="flex: 1; display: inline-block; padding: 10px; text-align: center; background: #337ab7; color: #fff; border-radius: 4px; text-decoration: none;">
+      캠퍼스 지도
+    </a>
+    <a href="{% url 'bus_map' %}" style="flex: 1; display: inline-block; padding: 10px; text-align: center; background: #5cb85c; color: #fff; border-radius: 4px; text-decoration: none;">
+      버스 지도
+    </a>
+  </div>
+
+  <!-- 캠퍼스 맵 이미지 -->
+<div style="position: relative; width: 100%; max-width: 1000px; margin: 0 auto;">
+  <img src="{% static 'images/campus_map.png' %}" alt="캠퍼스 맵"
+       style="width: 100%; height: auto; display: block;">
+
+  <!-- 마커 그룹 -->
+  <div id="marker-group"
+     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none;">
+  {% for marker in markers %}
+    <div class="marker" style="top: {{ marker.y }}%; left: {{ marker.x }}%;" data-label="{{ marker.label }}">
+    <svg viewBox="0 0 24 24" width="24" height="24">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13
+               c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5
+               12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5z"
+            fill="#ff0000" />
+    </svg>
+  </div>
+{% endfor %}
+</div>
+
+  <!-- 버튼 -->
+  <button id="toggle-route" class="campus-button"
+          style="position: absolute; top: 20px; left: 20px; z-index: 10; cursor: pointer;">
+    식당 위치
+  </button>
+</div>
+
+  <!-- 안내 텍스트 -->
+  <div class="campus-map-info" style="margin-top: 20px; font-size: 14px;">
+    <p>청주대학교 캠퍼스맵입니다. 교내 주요 건물과 버스 경로를 확인할 수 있어요.</p>
+    <p>문의사항은 교내 행정실로 연락해주세요.</p>
+    <ul style="list-style: none; padding: 0;">
+      <li><strong>위치:</strong> 충북 청주시 청원구 대성로 298</li>
+      <li><strong>연락처:</strong> 000-0000-0000</li>
+      <li><strong>업데이트 예정:</strong> 2025년 6월</li>
+    </ul>
+  </div>
+
+<!-- 홈으로 돌아가기 버튼 -->
+  <div style="margin-top: 30px; text-align: center;">
+    <a href="/" style="display: inline-block; padding: 10px 20px; background: #999; color: #fff; border-radius: 4px; text-decoration: none;">홈으로 돌아가기</a>
+  </div>
+
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('toggle-route');
+    const markerGroup = document.getElementById('marker-group');
+    let visible = false;
+
+    button.addEventListener('click', function () {
+      visible = !visible;
+      markerGroup.style.opacity = visible ? '1' : '0';
+    });
+  });
+</script>
+
+    <style>
+        .campus-button {
+            display: inline-block;
+            color: #000000;
+            background: white;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.95em;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);-
+            transition: all 0.3s ease-in-out;
+        }
+        .campus-button:hover { /* 호버 기능은 제거하고 어둡게 해주는 기능만 추가 */
+            background: #e6e6e6; /* 원래보다 살짝 어두운 회색 */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+
+    <style>
+#marker-group .marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+}
+ .marker::after {
+    content: attr(data-label);
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: #000000;
+    font-size: 12px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+</style>
+{% endblock %}

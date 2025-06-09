@@ -1,0 +1,145 @@
+{% extends 'base_suggestions.html' %}
+{% block content %}
+<div class="flex flex-col items-center justify-start min-h-screen py-10 bg-gray-100">
+
+    <!-- 게시글 카드 -->
+    <div class="w-full max-w-2xl p-8 bg-white rounded-2xl shadow-md mb-10 text-center">
+        <h1 class="text-2xl font-bold mb-2">{{ suggestion.title }}</h1>
+
+        {% if suggestion.attachment %}
+  {% with ext=suggestion.attachment.url|lower|slice:'-4:' %}
+    {% if ext == '.png' or ext == '.jpg' or ext == 'jpeg' or ext == '.gif' %}
+      <div class="my-4">
+        <img src="{{ suggestion.attachment.url }}" alt="첨부 이미지"
+             class="w-full max-w-md mx-auto rounded-lg shadow border">
+      </div>
+    {% else %}
+      <p>첨부파일: <a href="{{ suggestion.attachment.url }}" download>
+        {{ suggestion.attachment.name|cut:"attachments/" }}
+      </a></p>
+    {% endif %}
+  {% endwith %}
+{% endif %}
+
+        <p class="text-gray-700 mb-4 whitespace-pre-line">{{ suggestion.content }}</p>
+        <p class="text-sm text-gray-500">
+            작성자: <span class="font-medium">{{ suggestion.author.username }}</span> |
+            작성일: {{ suggestion.created_at|date:"Y년 m월 d일 A h:i" }}
+        </p>
+
+        {% if suggestion.attachment %}
+        <div class="mt-3 text-sm">
+            📎 첨부파일:
+            <a href="{{ suggestion.attachment.url }}" class="text-blue-600 hover:underline" download>
+                {{ suggestion.attachment.name|cut:"attachments/" }}
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="flex justify-center gap-4 my-6">
+            <button id="likeBtn" class="flex items-center gap-1 px-4 py-2 bg-green-100 rounded hover:bg-green-200">
+                👍 추천 {{ likes }}
+            </button>
+            <button id="dislikeBtn" class="flex items-center gap-1 px-4 py-2 bg-red-100 rounded hover:bg-red-200">
+                👎 싫어요 {{ dislikes }}
+            </button>
+        </div>
+    </div>
+
+    <!-- 댓글 카드 -->
+    <div class="w-full max-w-2xl p-6 bg-white rounded-xl shadow text-center">
+        <h3 class="text-lg font-bold mb-4">댓글</h3>
+        <form method="post" class="mb-6 space-y-4">
+            {% csrf_token %}
+            <div class="flex items-start justify-center gap-3">
+                <label for="id_content" class="mt-2 w-20 text-sm font-medium text-gray-700 text-right">댓글</label>
+                <textarea name="content" id="id_content" rows="2"
+                          class="w-80 max-w-full border rounded px-3 py-2 text-sm resize-none focus:ring focus:ring-blue-200"
+                          placeholder="댓글을 입력하세요"></textarea>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50">
+                    댓글 작성
+                </button>
+            </div>
+        </form>
+
+        {% for comment in comments %}
+        <div class="bg-gray-50 p-4 rounded-lg mb-4 text-left">
+            <p class="font-semibold">{{ comment.author.username }}</p>
+            <p class="mb-1">{{ comment.content }}</p>
+            <p class="text-sm text-gray-500">{{ comment.created_at }}</p>
+
+            <form method="post" class="mt-3 space-y-2 ml-4">
+                {% csrf_token %}
+                <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                <div class="flex gap-2 items-start">
+                    <textarea name="content" rows="2"
+                              class="w-72 max-w-full border rounded px-3 py-2 text-sm resize-none focus:ring focus:ring-blue-200"
+                              placeholder="답글을 입력하세요"></textarea>
+                    <button type="submit" class="text-sm text-blue-600 hover:underline whitespace-nowrap mt-1">답글 작성</button>
+                </div>
+            </form>
+
+            {% for reply in comment.replies.all %}
+            <div class="ml-4 mt-3 p-3 border-l-2 border-gray-300 bg-white rounded">
+                <p class="font-semibold">{{ reply.author.username }}</p>
+                <p>{{ reply.content }}</p>
+                <p class="text-sm text-gray-500">{{ reply.created_at }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% empty %}
+        <p class="text-gray-500">댓글이 없습니다.</p>
+        {% endfor %}
+    </div>
+
+    <div class="mt-8">
+        <a href="{% url 'suggestion_community' %}" class="text-sm text-blue-600 hover:underline">← 목록으로 돌아가기</a>
+    </div>
+
+    {% if request.user == suggestion.author %}
+    <div class="text-center mt-4 space-x-4">
+        <a href="{% url 'suggestion_edit' suggestion.pk %}"
+           class="inline-block bg-yellow-400 text-white px-4 py-2 rounded hover:bg-yellow-500">
+            ✏️ 수정
+        </a>
+        <form action="{% url 'suggestion_delete' suggestion.pk %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit"
+                    class="inline-block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    onclick="return confirm('정말 삭제하시겠습니까?');">
+                🗑️ 삭제
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- 추천 AJAX -->
+<script>
+document.getElementById("likeBtn").onclick = () => sendReaction("like");
+document.getElementById("dislikeBtn").onclick = () => sendReaction("dislike");
+
+function sendReaction(reaction) {
+    fetch("{% url 'react_suggestion' suggestion.id %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `reaction=${reaction}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "ok") {
+            document.getElementById("likeBtn").textContent = `👍 추천 ${data.likes}`;
+            document.getElementById("dislikeBtn").textContent = `👎 싫어요 ${data.dislikes}`;
+        } else {
+            alert("이미 추천 또는 비추천을 하셨습니다.");
+        }
+    });
+}
+</script>
+{% endblock %}

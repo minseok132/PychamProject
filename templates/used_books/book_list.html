@@ -1,0 +1,91 @@
+{% extends "base_book.html" %}
+{% block title %}중고 도서 목록{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <h2 class="text-2xl font-bold mb-6 text-center">중고 도서 목록</h2>
+
+  <!-- ⭐ 카테고리 정렬 버튼 CSS만 -->
+  <style>
+    .sort-buttons a {
+      display: inline-block;
+      margin: 0 5px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      background-color: #e5e7eb;
+      color: #111827;
+      text-decoration: none;
+    }
+    .sort-buttons a.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+  </style>
+
+  <!-- ⭐ 정렬 버튼 -->
+  <div class="sort-buttons" style="text-align: center; margin-bottom: 10px;">
+    <a href="?sort=latest" class="{% if current_sort == 'latest' %}active{% endif %}">최신순</a>
+    <a href="?sort=oldest" class="{% if current_sort == 'oldest' %}active{% endif %}">과거순</a>
+    <a href="?sort=price" class="{% if current_sort == 'price' %}active{% endif %}">가격순</a>
+  </div>
+
+  <!-- ⭐ 도서 목록 -->
+  {% if page_obj %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for book in page_obj %}
+        <div class="bg-white p-4 rounded shadow hover:shadow-md transition">
+          <h3 class="text-lg font-semibold">{{ book.title }}</h3>
+          <p class="text-gray-600">판매자: {{ book.seller.username }}</p>
+          <p class="text-gray-800 font-bold">{{ book.price|floatformat:0 }}원</p>
+          <a href="{% url 'used_books:book_detail' book.pk %}"
+             class="inline-block mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+            상세보기
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="bg-white p-6 rounded shadow text-center">
+      <p class="text-gray-700">등록된 중고 도서가 없습니다.</p>
+    </div>
+  {% endif %}
+
+  <!-- ⭐ 페이지네이션: 숫자 버튼 5개만 보이게 -->
+  <div class="flex justify-center gap-2 mt-6 text-sm">
+    {% if page_obj.has_previous %}
+      <a href="?page=1{% if current_sort %}&sort={{ current_sort }}{% endif %}">처음</a>
+      <a href="?page={{ page_obj.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}">이전</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+        {% if page_obj.number == num %}
+          <span class="font-bold text-blue-500">{{ num }}</span>
+        {% else %}
+          <a href="?page={{ num }}{% if current_sort %}&sort={{ current_sort }}{% endif %}">{{ num }}</a>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}">다음</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}{% if current_sort %}&sort={{ current_sort }}{% endif %}">마지막</a>
+    {% endif %}
+  </div>
+
+  <!-- ⭐ 하단 버튼 -->
+  <div class="flex justify-center gap-4 mt-8">
+    <a href="{% url 'used_books:book_create' %}"
+       class="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+      책 등록
+    </a>
+    <a href="/" class="inline-block px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 text-sm">
+      홈페이지로 돌아가기
+    </a>
+    <a href="{% url 'chat:chat_list' %}"
+       class="inline-block px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm">
+      채팅
+    </a>
+  </div>
+</div>
+{% endblock %}

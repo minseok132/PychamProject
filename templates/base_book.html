@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <style>
+    input[type="text"],
+    input[type="number"],
+    textarea {
+        transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }
+    input:focus,
+    textarea:focus {
+        border-color: #3b82f6; /* Tailwind blue-500 */
+        box-shadow: 0 0 0 1px #3b82f6;
+    }
+</style>
+
+
+  <meta charset="UTF-8">
+  <title>{% block title %}중고 도서 게시판{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- 상단 네비게이션 -->
+  <header class="bg-white shadow py-4 px-8 flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <a href="{% url 'calendar_app:calendar' %}">
+      <img src="{% static 'images/cheongju_logo_01.png' %}" alt="청주대 로고" class="h-12">
+      </a>
+      <h1 class="text-2xl font-bold text-gray-800">중고 도서 게시판</h1>
+    </div>
+
+    <div class="text-sm">
+      {% if user.is_authenticated %}
+        <span class="mr-2">{{ user.username }}님</span>
+        <a href="{% url 'profile' %}" class="text-blue-600 hover:underline mr-2">내 프로필</a>
+        <form action="{% url 'logout' %}" method="post" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="text-blue-600 hover:underline">로그아웃</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}" class="text-blue-600 hover:underline mr-2">로그인</a>
+        <a href="{% url 'signup' %}" class="text-blue-600 hover:underline">회원가입</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- 본문 콘텐츠 -->
+  <main class="flex-grow container mx-auto px-4 py-8">
+    {% block content %}
+    <!-- 개별 페이지 내용이 여기에 들어갑니다. -->
+    {% endblock %}
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="bg-white text-center py-4 text-xs text-gray-500 border-t">
+    &copy; 2025 청주대학교 중고도서 게시판
+  </footer>
+</body>
+</html>

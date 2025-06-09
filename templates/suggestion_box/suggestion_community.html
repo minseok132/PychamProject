@@ -1,0 +1,13 @@
+{% extends "../base.html" %}
+
+{% block content %}
+<h2>📬 건의함 커뮤니티</h2>
+
+<ul>
+  {% for suggestion in suggestions %}
+    <li>{{ suggestion.title }} - {{ suggestion.created_at|date:"Y-m-d H:i" }}</li>
+  {% empty %}
+    <li>아직 건의글이 없습니다.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
